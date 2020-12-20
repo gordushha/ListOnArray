@@ -3,6 +3,59 @@
 using namespace std;
 
 template<class T>
+class List;
+
+template<class T>
+class ListIterator
+{
+private:
+	List<T>& list;
+	int index;
+public:
+	ListIterator(List<T>& _list, int _index) : list(_list), index(_index) {}
+	ListIterator(ListIterator<T>& _v) : list(_v.list), index(_v.index) {}
+	~ListIterator() {}
+
+	bool CanGoForward()
+	{
+		return (list.links[index] != -1);
+	}
+	void GoForward()
+	{
+		if (!CanGoForward())
+			throw logic_error("end");
+		index = list.links[index];
+	}
+
+	bool operator==(const ListIterator<T>& _v)
+	{
+		return (list == _v.list && index == _v.index);
+	}
+	ListIterator<T> operator++(int)
+	{
+		GoForward();
+		return (*this);
+	}
+
+	ListIterator<T>& operator=(const ListIterator<T>& _v)
+	{
+		list = _v.list;
+		index = _v.index;
+		return (*this);
+	}
+
+	T& operator *()
+	{
+		return(list.data[index]);
+	}
+
+	T GetData()
+	{
+		return list.data[index];
+	}
+};
+
+template<class T>
 class List
 {
 private:
@@ -27,7 +80,10 @@ public:
 
 	void clear();
 
-	T& operator[](const int index);
+	ListIterator<T> begin() { return ListIterator<T>(*this, head); }
+
+	template<class T>
+	friend class ListIterator;
 
 	void push_back(T data);
 	T pop_back();
@@ -41,8 +97,13 @@ public:
 template<class T>
 ostream& operator<<(ostream& ostr, List<T>& _l)
 {
+	ListIterator<T> k = _l.begin();
 	for (int i = 0; i < _l.GetCount(); i++)
-		ostr << _l[i] << " ";
+	{
+		ostr << *k << " ";
+		k++;
+	}
+
 	return ostr;
 }
 
@@ -111,24 +172,6 @@ inline void List<T>::clear()
 
 	head = -1;
 	count = 0;
-}
-
-template<class T>
-inline T& List<T>::operator[](const int index)
-{
-	if (index < 0 || index >= count)
-		throw length_error("incorrect index");
-
-	int counter = 0;
-	int temp = head;
-
-	while (temp != -1)
-	{
-		if (counter == index)
-			return this->data[temp];
-		temp = this->links[temp];
-		counter++;
-	}
 }
 
 template<class T>
